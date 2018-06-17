@@ -1,0 +1,92 @@
+<html>
+<head>
+	
+	<title>Screen Name Analyzer</title>
+		<script type="text/javascript" src= "http://code.jquery.com/jquery-latest.min.js"></script>
+</head>
+<body>
+	
+	<input type="text" id= "screen_name" placeholder = "vipulsodha">
+	<input type="button" id = "submit" value = "Submit" > <span id = "gender"></span>
+
+<div style="width:100%; height:600px; border: 2px solid black;">
+	<div style="width:32%; height:100%; border-right: 2px solid black;float:left; overflow:auto;" id = "sentiment"></div>
+	<div style="width:32%; height:100%; border-right: 2px solid black;float:left; overflow:auto;" id = "hashmap"></div>
+	<div style="width:32%; height:100%; border-right: 2px solid black;float:left; overflow:auto;" id = "wordmap"></div>
+
+
+</div>
+
+
+<script type="text/javascript" src="https://s3-ap-northeast-1.amazonaws.com/cricdial/socket.io.js"></script>
+
+<script type="text/javascript">
+var sentiment = $("#sentiment"),
+	hashmap = $("#hashmap"),
+	wordmap = $("#wordmap"),
+	gender = $("#gender");
+
+var socket  = io.connect();
+	$(document).ready(function(){
+
+		$("#submit").on('click', function(){
+			sentiment.html('');
+			wordmap.html('');
+			hashmap.html('');
+			var screen_name = $("#screen_name").val();
+
+			socket.emit('screen_name', {screen_name: screen_name});
+		});
+
+
+
+	});
+
+
+
+
+
+
+socket.on('sentiment_map', function(data){
+console.log(data);
+data.sentimentMap.forEach(function(senti){
+	sentiment.append("<div style='float:left; width:100%;border:2px solid black; height:auto;'>Tweet: <br/>"+senti.text+"<br/><br/>sentiment Socre: "+senti.sentiment+"<div>")
+});
+});
+
+socket.on('word_map', function(data){
+console.log(data);
+var hashes = Object.keys(data.wordMap.hashFreqMap);
+
+hashes.forEach(function(hash){
+	hashmap.append('<div style="float:left; width:100%; border:2px solid black; height:auto;">Hash :'+hash+'<br><br/>Count:'+data.wordMap.hashFreqMap[hash]+'</div>');
+});
+
+var words = Object.keys(data.wordMap.wordFreqMap);
+
+words.forEach(function(word){
+	wordmap.append('<div style="float:left; width:100%; border:2px solid black; height:auto;">Word  :'+word+'<br><br/>Count:'+data.wordMap.wordFreqMap[word]+'</div>');
+});
+
+});
+
+socket.on('gender_map', function(data){
+console.log(data);
+if(data.score > 0) {
+	gender.text('Gender:Male');
+} else if(data.score < 0) {
+	gender.text('Gender: Female');
+} else {
+	gender.text('Gender: Undefined');
+}
+});
+	</script>
+
+
+	
+
+
+
+</body>
+
+</html>
